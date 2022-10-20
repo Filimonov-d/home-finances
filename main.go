@@ -15,10 +15,8 @@ type Income struct {
 	Amount int
 }
 
-var PointerProfit = Profit{}
-var PointerIncome = Income{}
-
 func InputAmount(p *Profit) {
+	var PointerProfit = Profit{}
 
 	fmt.Println("\nEnter Amount(integer):")
 	if _, err := fmt.Scanln(&p.Amount); err != nil {
@@ -28,6 +26,7 @@ func InputAmount(p *Profit) {
 }
 
 func InputSource(p *Profit) {
+	var PointerProfit = Profit{}
 
 	fmt.Println("\nEnter Source(string):")
 	if _, err := fmt.Scanln(&p.Source); err != nil {
@@ -37,6 +36,7 @@ func InputSource(p *Profit) {
 }
 
 func InputDate(p *Profit) {
+	var PointerProfit = Profit{}
 
 	fmt.Println("\nEnter Date(string):")
 	if _, err := fmt.Scanln(&p.Date); err != nil {
@@ -45,6 +45,7 @@ func InputDate(p *Profit) {
 	}
 }
 func InputData(p *Profit) {
+	var PointerProfit = Profit{}
 
 	InputAmount(&PointerProfit)
 	defer fmt.Println("Profit Amount: ", p.Amount)
@@ -59,6 +60,7 @@ func InputData(p *Profit) {
 }
 
 func InputIncome(i *Income) {
+	var PointerIncome = Income{}
 
 	fmt.Println("Enter Amount(integer):")
 	if _, err := fmt.Scanln(&i.Amount); err != nil {
@@ -70,6 +72,9 @@ func InputIncome(i *Income) {
 }
 
 func main() {
+
+	var PointerProfit = Profit{}
+	var PointerIncome = Income{}
 
 	InputIncome(&PointerIncome)
 
