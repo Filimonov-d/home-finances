@@ -44,16 +44,17 @@ func InputDate(p *Profit) {
 		InputDate(&PointerProfit)
 	}
 }
-func InputProfit(p *Profit) {
+func InputData(p *Profit) {
 
 	InputAmount(&PointerProfit)
-	defer fmt.Println("Ur Amount: ", p.Amount)
+	defer fmt.Println("Profit Amount: ", p.Amount)
 
 	InputSource(&PointerProfit)
-	defer fmt.Println("Ur Source: ", p.Source)
+	defer fmt.Println("Profit Source: ", p.Source)
 
 	InputDate(&PointerProfit)
-	defer fmt.Println("\nUr Date: ", p.Date)
+	defer fmt.Println("\nProfit Date: ", p.Date)
+	defer fmt.Println("\nUr Profit: ")
 
 }
 
@@ -64,13 +65,15 @@ func InputIncome(i *Income) {
 		fmt.Println("Amount error: ", err)
 		InputIncome(&PointerIncome)
 	}
+	defer fmt.Println("\nMonth income amount: ", i.Amount)
+
 }
 
 func main() {
 
 	InputIncome(&PointerIncome)
 
-	InputProfit(&PointerProfit)
+	InputData(&PointerProfit)
 
 	/* router := gin.Default()
 	router.GET("/track/listen", listenTrack)
