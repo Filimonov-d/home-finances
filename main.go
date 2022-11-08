@@ -8,7 +8,7 @@ import (
 )
 
 type Profit struct {
-	Amount int    `json:"amount"` //Так дописывать в каждой структуре
+	Amount int    `json:"amount"`
 	Source string `json:"source"`
 	Date   string `json:"date"`
 }
@@ -105,12 +105,12 @@ func InsertSalary(c *gin.Context) {
 	fmt.Println(salary)
 }
 
-func InsertProfit(c *gin.Context) { //с жин контекст это обязательно в каждой функции
+func InsertProfit(c *gin.Context) {
 
 	fmt.Println("Inserting Profit")
 
-	var profit Profit                                 // Это переменная которая содержит структуру
-	if err := c.ShouldBindJSON(&profit); err != nil { //Это выводит данные
+	var profit Profit
+	if err := c.ShouldBindJSON(&profit); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
@@ -120,7 +120,7 @@ func InsertProfit(c *gin.Context) { //с жин контекст это обяз
 func main() {
 
 	router := gin.Default()
-	router.POST("/profit/insert", InsertProfit) // Это постит, путь, и что
+	router.POST("/profit/insert", InsertProfit)
 	router.POST("/salary/insert", InsertSalary)
 	router.POST("/credit/insert", InsertCredit)
 	router.POST("/expensesitem/insert", InsertExpensesItem)
