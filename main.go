@@ -31,6 +31,42 @@ type ExpensesItem struct {
 }
 
 type Expense struct {
+	Date        string `json:"date"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Amount      int    `json:"amount"`
+}
+
+type Deposit struct {
+	Date        string `json:"date"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Amount      int    `json:"amount"`
+	ReturnDate  string `json:"returndate"`
+}
+
+func InsertDeposit(c *gin.Context) {
+
+	fmt.Println("Inserting deposit")
+
+	var deposit Deposit
+	if err := c.ShouldBindJSON(&deposit); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
+	fmt.Println(deposit)
+}
+
+func InsertExpense(c *gin.Context) {
+
+	fmt.Println("Inserting expense")
+
+	var expense Expense
+	if err := c.ShouldBindJSON(&expense); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
+	fmt.Println(expense)
 }
 
 func InsertExpensesItem(c *gin.Context) {
@@ -88,6 +124,8 @@ func main() {
 	router.POST("/salary/insert", InsertSalary)
 	router.POST("/credit/insert", InsertCredit)
 	router.POST("/expensesitem/insert", InsertExpensesItem)
+	router.POST("/expense/insert", InsertExpense)
+	router.POST("/deposit/insert", InsertDeposit)
 
 	router.Run("localhost:8080")
 	fmt.Println("s")
