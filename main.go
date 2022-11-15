@@ -78,7 +78,7 @@ func InsertExpense(c *gin.Context) {
 }
 
 func InsertExpensesItem(c *gin.Context) {
-	insertSQL := "insert into expence_itemes (name) VALUES (:name)"
+	insertSQL := "insert into expence_items (name) VALUES (:name)"
 
 	fmt.Println("Inserting Item of expensions")
 
