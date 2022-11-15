@@ -5,6 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+)
+
+var (
+	ExpenceItems []ExpensesItem
+	DB           *sqlx.DB
 )
 
 type Profit struct {
@@ -27,14 +34,15 @@ type Credit struct {
 }
 
 type ExpensesItem struct {
-	Name string `json:"name"`
+	ID   int    `json:"id" db:"id"`
+	Name string `json:"name" db:"name"`
 }
 
 type Expense struct {
-	Date        string `json:"date"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Amount      int    `json:"amount"`
+	Date         string       `json:"date"`
+	ExpensesItem ExpensesItem `json:"name"`
+	Description  string       `json:"description"`
+	Amount       int          `json:"amount"`
 }
 
 type Deposit struct {
@@ -70,15 +78,27 @@ func InsertExpense(c *gin.Context) {
 }
 
 func InsertExpensesItem(c *gin.Context) {
+	insertSQL := "insert into expence_itemes (name) VALUES (:name)"
 
 	fmt.Println("Inserting Item of expensions")
 
-	var expensesitem ExpensesItem
-	if err := c.ShouldBindJSON(&expensesitem); err != nil {
+	var expensesItem ExpensesItem
+	if err := c.ShouldBindJSON(&expensesItem); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
-	fmt.Println(expensesitem)
+	ExpenceItems = append(ExpenceItems, expensesItem)
+
+	res, err := DB.NamedExec(insertSQL, expensesItem)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println("LastInsertId:")
+	fmt.Println(res.LastInsertId())
+	fmt.Println(ExpenceItems)
 }
 
 func InsertCredit(c *gin.Context) {
@@ -117,7 +137,24 @@ func InsertProfit(c *gin.Context) {
 	fmt.Println(profit)
 }
 
+func GetExpences(c *gin.Context) {
+	selectSQL := "SELECT * FROM expence_items"
+	fmt.Println("Get expence items")
+	if err := DB.Select(&ExpenceItems, selectSQL); err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, ExpenceItems)
+}
+
 func main() {
+	var err error
+	dsn := "user=postgres password=postgres dbname=home_finance sslmode=disable"
+	if DB, err = sqlx.Connect("postgres", dsn); err != nil {
+		fmt.Println(err)
+	}
 
 	router := gin.Default()
 	router.POST("/profit/insert", InsertProfit)
@@ -126,6 +163,7 @@ func main() {
 	router.POST("/expensesitem/insert", InsertExpensesItem)
 	router.POST("/expense/insert", InsertExpense)
 	router.POST("/deposit/insert", InsertDeposit)
+	router.GET("/expenceItems", GetExpences)
 
 	router.Run("localhost:8080")
 	fmt.Println("s")
