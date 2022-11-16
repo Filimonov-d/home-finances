@@ -11,7 +11,7 @@ import (
 
 var (
 	ExpenceItems []ExpensesItem
-	Expence      []Expense
+	Expences     []Expense
 	DB           *sqlx.DB
 )
 
@@ -40,10 +40,10 @@ type ExpensesItem struct {
 }
 
 type Expense struct {
-	Date         string       `json:"date"`
-	ExpensesItem ExpensesItem `json:"name"`
-	Description  string       `json:"description"`
-	Amount       int          `json:"amount"`
+	Date        string `json:"date" db:"date"`
+	Name        string `json:"name" db:"name"`
+	Description string `json:"description"`
+	Amount      int    `json:"amount" db:"amount"`
 }
 
 type Deposit struct {
@@ -68,7 +68,7 @@ func InsertDeposit(c *gin.Context) {
 
 func InsertExpense(c *gin.Context) {
 
-	insertSQL := "insert into expences (name,amount,date) VALUES (?,?,?)"
+	insertSQL := "insert into expences (name,amount,date) VALUES (:name,:amount,:date)"
 
 	fmt.Println("Inserting expense")
 
