@@ -11,6 +11,7 @@ import (
 
 var (
 	ExpenceItems []ExpensesItem
+	Expence      []Expense
 	DB           *sqlx.DB
 )
 
@@ -67,6 +68,8 @@ func InsertDeposit(c *gin.Context) {
 
 func InsertExpense(c *gin.Context) {
 
+	insertSQL := "insert into expences (name,amount,date) VALUES (?,?,?)"
+
 	fmt.Println("Inserting expense")
 
 	var expense Expense
@@ -74,6 +77,17 @@ func InsertExpense(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
+	Expence = append(Expence, expense)
+
+	res, err := DB.NamedExec(insertSQL, expense)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println("LastInsertId:")
+	fmt.Println(res.LastInsertId())
 	fmt.Println(expense)
 }
 
