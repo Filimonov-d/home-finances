@@ -11,14 +11,15 @@ import (
 
 var (
 	ExpenceItems []ExpensesItem
-	Expences     []Expense
+	Expence      []Expense
+	Profits      []Profit
 	DB           *sqlx.DB
 )
 
 type Profit struct {
-	Amount int    `json:"amount"`
-	Source string `json:"source"`
-	Date   string `json:"date"`
+	Amount int    `json:"amount" db:"amount"`
+	Source string `json:"source" db:"source"`
+	Date   string `json:"date" db:"date"`
 }
 
 type Salary struct {
@@ -141,6 +142,8 @@ func InsertSalary(c *gin.Context) {
 
 func InsertProfit(c *gin.Context) {
 
+	insertSQL := "insert into profit (amount,source,date) VALUES (:amount,:source,:date)"
+
 	fmt.Println("Inserting Profit")
 
 	var profit Profit
@@ -148,6 +151,17 @@ func InsertProfit(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
+	Profits = append(Profits, profit)
+
+	res, err := DB.NamedExec(insertSQL, profit)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println("LastInsertId:")
+	fmt.Println(res.LastInsertId())
 	fmt.Println(profit)
 }
 
