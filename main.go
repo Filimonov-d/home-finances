@@ -13,6 +13,9 @@ var (
 	ExpenceItems []ExpensesItem
 	Expence      []Expense
 	Profits      []Profit
+	Deposits     []Deposit
+	Credits      []Credit
+	Salaries     []Salary
 	DB           *sqlx.DB
 )
 
@@ -23,16 +26,16 @@ type Profit struct {
 }
 
 type Salary struct {
-	Amount int    `json:"amount"`
-	Date   string `json:"date"`
+	Amount int    `json:"amount" db:"amount"`
+	Date   string `json:"date" db:"date"`
 }
 
 type Credit struct {
-	Amount      int    `json:"amount"`
-	Date        string `json:"date"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	ReturnDate  string `json:"returndate"`
+	Amount      int    `json:"amount" db:"amount"`
+	Date        string `json:"date" db:"date"`
+	Name        string `json:"name" db:"name"`
+	Description string `json:"description" db:"description"`
+	ReturnDate  string `json:"returndate" db:"returndate"`
 }
 
 type ExpensesItem struct {
@@ -48,14 +51,16 @@ type Expense struct {
 }
 
 type Deposit struct {
-	Date        string `json:"date"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Amount      int    `json:"amount"`
-	ReturnDate  string `json:"returndate"`
+	Date        string `json:"date" db:"date"`
+	Name        string `json:"name" db:"name"`
+	Description string `json:"description" db:"description"`
+	Amount      int    `json:"amount" db:"amount"`
+	ReturnDate  string `json:"returndate" db:"returndate"`
 }
 
 func InsertDeposit(c *gin.Context) {
+
+	insertSQL := "insert into deposit (name,description,amount,returndate,date) VALUES (:name,:description,:amount,:returndate,:date)"
 
 	fmt.Println("Inserting deposit")
 
@@ -64,6 +69,17 @@ func InsertDeposit(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
+	Deposits = append(Deposits, deposit)
+
+	res, err := DB.NamedExec(insertSQL, deposit)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println("LastInsertId:")
+	fmt.Println(res.LastInsertId())
 	fmt.Println(deposit)
 }
 
@@ -118,6 +134,8 @@ func InsertExpensesItem(c *gin.Context) {
 
 func InsertCredit(c *gin.Context) {
 
+	insertSQL := "insert into credit (amount, date, name, description, returndate) VALUES (:amount,:date, :name, :description, :returndate)"
+
 	fmt.Println("Inserting Credit")
 
 	var credit Credit
@@ -125,10 +143,23 @@ func InsertCredit(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
+	Credits = append(Credits, credit)
+
+	res, err := DB.NamedExec(insertSQL, credit)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println("LastInsertId:")
+	fmt.Println(res.LastInsertId())
 	fmt.Println(credit)
 }
 
 func InsertSalary(c *gin.Context) {
+
+	insertSQL := "insert into salary (amount,date) VALUES (:amount,:date)"
 
 	fmt.Println("Inserting Salary")
 
@@ -137,6 +168,17 @@ func InsertSalary(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
+	Salaries = append(Salaries, salary)
+
+	res, err := DB.NamedExec(insertSQL, salary)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println("LastInsertId:")
+	fmt.Println(res.LastInsertId())
 	fmt.Println(salary)
 }
 
