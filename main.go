@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -16,8 +17,14 @@ var (
 	Deposits     []Deposit
 	Credits      []Credit
 	Salaries     []Salary
+	iDates       []iDate
 	DB           *sqlx.DB
 )
+
+type iDate struct {
+	Date string `json:"date" db:"date"`
+	Sum  string `json:"sum" db:"sum"`
+}
 
 type Profit struct {
 	Amount int    `json:"amount" db:"amount"`
@@ -48,6 +55,10 @@ type Expense struct {
 	Name        string `json:"name" db:"name"`
 	Description string `json:"description"`
 	Amount      int    `json:"amount" db:"amount"`
+}
+
+type CurrentMoney struct {
+	Amount int `json:"amount" db:"amount"`
 }
 
 type Deposit struct {
@@ -185,6 +196,38 @@ func InsertSalary(c *gin.Context) {
 func InsertProfit(c *gin.Context) {
 
 	insertSQL := "insert into profit (amount,source,date) VALUES (:amount,:source,:date)"
+	insertSQLl := "insert into money (amount,date) VALUES (:amount,:date)"
+
+	var profit Profit
+
+	ctx := context.Background()
+	tx, err := DB.BeginTx(ctx, nil)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	_, err = tx.NamedExecContext(ctx, "insert into profit (amount,source,date) VALUES (:amount,:source,:date)")
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
+	_, err = tx.NamedExecContext(ctx, "insert into money (amount,date) VALUES (:amount,:date)")
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	/*insertSQL := "insert into profit (amount,source,date) VALUES (:amount,:source,:date)"
 
 	fmt.Println("Inserting Profit")
 
@@ -200,11 +243,40 @@ func InsertProfit(c *gin.Context) {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
-	}
+	}*/
 
 	fmt.Println("LastInsertId:")
-	fmt.Println(res.LastInsertId())
-	fmt.Println(profit)
+	/*fmt.Println(res.LastInsertId())
+	fmt.Println(profit)*/
+	fmt.Println(tx)
+}
+
+func InsertDate(c *gin.Context) {
+	var date iDate
+
+	if err := c.ShouldBindJSON(&date); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
+	fmt.Println(date)
+
+}
+
+func GetMoney(c *gin.Context) {
+
+	selectSQL := "select sum(m.amount)  from money m where m.date <= $1"
+
+	fmt.Println("Get Money")
+
+	if err := DB.Select(&iDates, selectSQL, "12.12.2022"); err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	fmt.Println()
+
+	c.JSON(http.StatusOK, ExpenceItems)
 }
 
 func GetExpences(c *gin.Context) {
@@ -233,7 +305,9 @@ func main() {
 	router.POST("/expensesitem/insert", InsertExpensesItem)
 	router.POST("/expense/insert", InsertExpense)
 	router.POST("/deposit/insert", InsertDeposit)
+	router.POST("/date/insert", InsertDate)
 	router.GET("/expenceItems", GetExpences)
+	router.GET("/money", GetMoney)
 
 	router.Run("localhost:8080")
 	fmt.Println("s")
