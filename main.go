@@ -195,26 +195,26 @@ func InsertSalary(c *gin.Context) {
 
 func InsertProfit(c *gin.Context) {
 
-	insertSQL := "insert into profit (amount,source,date) VALUES (:amount,:source,:date)"
-	insertSQLl := "insert into money (amount,date) VALUES (:amount,:date)"
+	// insertSQL := "insert into profit (amount,source,date) VALUES (:amount,:source,:date)"
+	// insertSQLl := "insert into money (amount,date) VALUES (:amount,:date)"
 
 	var profit Profit
 
 	ctx := context.Background()
-	tx, err := DB.BeginTx(ctx, nil)
+	tx, err := DB.BeginTxx(ctx, nil)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	_, err = tx.NamedExecContext(ctx, "insert into profit (amount,source,date) VALUES (:amount,:source,:date)")
+	_, err = tx.NamedExecContext(ctx, "insert into profit (amount,source,date) VALUES (:amount,:source,:date)", &profit)
 	if err != nil {
 		tx.Rollback()
 		return
 	}
 
-	_, err = tx.NamedExecContext(ctx, "insert into money (amount,date) VALUES (:amount,:date)")
+	_, err = tx.NamedExecContext(ctx, "insert into money (amount,date) VALUES (:amount,:date)", &profit)
 	if err != nil {
 		tx.Rollback()
 		return
