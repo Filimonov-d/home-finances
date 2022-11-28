@@ -203,15 +203,18 @@ func InsertProfit(c *gin.Context) {
 	var money Money
 
 	if err := c.ShouldBindJSON(&money); err != nil {
+		fmt.Println("Error bind JSON on &money")
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
 	var profit Profit
 
 	if err := c.ShouldBindJSON(&profit); err != nil {
+		fmt.Println("Error bind JSON on &profit")
 		c.String(http.StatusBadRequest, err.Error())
 	}
 
+	//Зачем тебе эти переаенные?
 	Monei = append(Monei, money)
 	Profits = append(Profits, profit)
 
