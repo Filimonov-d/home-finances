@@ -17,6 +17,7 @@ var (
 	Deposits     []Deposit
 	Credits      []Credit
 	Salaries     []Salary
+	Monei        []Money
 	iDates       []iDate
 	DB           *sqlx.DB
 )
@@ -57,8 +58,9 @@ type Expense struct {
 	Amount      int    `json:"amount" db:"amount"`
 }
 
-type CurrentMoney struct {
-	Amount int `json:"amount" db:"amount"`
+type Money struct {
+	Amount int    `json:"amount" db:"amount"`
+	Date   string `json:"date" db:"date"`
 }
 
 type Deposit struct {
@@ -198,7 +200,20 @@ func InsertProfit(c *gin.Context) {
 	// insertSQL := "insert into profit (amount,source,date) VALUES (:amount,:source,:date)"
 	// insertSQLl := "insert into money (amount,date) VALUES (:amount,:date)"
 
+	var money Money
+
+	if err := c.ShouldBindJSON(&money); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
 	var profit Profit
+
+	if err := c.ShouldBindJSON(&profit); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
+	Monei = append(Monei, money)
+	Profits = append(Profits, profit)
 
 	ctx := context.Background()
 	tx, err := DB.BeginTxx(ctx, nil)
@@ -214,7 +229,7 @@ func InsertProfit(c *gin.Context) {
 		return
 	}
 
-	_, err = tx.NamedExecContext(ctx, "insert into money (amount,date) VALUES (:amount,:date)", &profit)
+	_, err = tx.NamedExecContext(ctx, "insert into money (amount,date) VALUES (:amount,:date)", &money)
 	if err != nil {
 		tx.Rollback()
 		return
