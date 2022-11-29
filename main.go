@@ -197,26 +197,12 @@ func InsertSalary(c *gin.Context) {
 
 func InsertProfit(c *gin.Context) {
 
-	// insertSQL := "insert into profit (amount,source,date) VALUES (:amount,:source,:date)"
-	// insertSQLl := "insert into money (amount,date) VALUES (:amount,:date)"
-
-	var money Money
-
-	if err := c.ShouldBindJSON(&money); err != nil {
-		fmt.Println("Error bind JSON on &money")
-		c.String(http.StatusBadRequest, err.Error())
-	}
-
 	var profit Profit
 
 	if err := c.ShouldBindJSON(&profit); err != nil {
 		fmt.Println("Error bind JSON on &profit")
 		c.String(http.StatusBadRequest, err.Error())
 	}
-
-	//Зачем тебе эти переаенные?
-	Monei = append(Monei, money)
-	Profits = append(Profits, profit)
 
 	ctx := context.Background()
 	tx, err := DB.BeginTxx(ctx, nil)
@@ -228,12 +214,14 @@ func InsertProfit(c *gin.Context) {
 
 	_, err = tx.NamedExecContext(ctx, "insert into profit (amount,source,date) VALUES (:amount,:source,:date)", &profit)
 	if err != nil {
+		fmt.Println("1")
 		tx.Rollback()
 		return
 	}
 
-	_, err = tx.NamedExecContext(ctx, "insert into money (amount,date) VALUES (:amount,:date)", &money)
+	_, err = tx.NamedExecContext(ctx, "insert into money (amount,date) VALUES (:amount,:date)", &profit)
 	if err != nil {
+		fmt.Println("2")
 		tx.Rollback()
 		return
 	}
@@ -245,27 +233,7 @@ func InsertProfit(c *gin.Context) {
 		return
 	}
 
-	/*insertSQL := "insert into profit (amount,source,date) VALUES (:amount,:source,:date)"
-
-	fmt.Println("Inserting Profit")
-
-	var profit Profit
-	if err := c.ShouldBindJSON(&profit); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-	}
-
-	Profits = append(Profits, profit)
-
-	res, err := DB.NamedExec(insertSQL, profit)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}*/
-
 	fmt.Println("LastInsertId:")
-	/*fmt.Println(res.LastInsertId())
-	fmt.Println(profit)*/
 	fmt.Println(tx)
 }
 
