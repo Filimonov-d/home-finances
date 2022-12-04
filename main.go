@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -13,18 +16,42 @@ import (
 var (
 	ExpenceItems []ExpensesItem
 	Expence      []Expense
-	Profits      []Profit
 	Deposits     []Deposit
 	Credits      []Credit
 	Salaries     []Salary
-	Monei        []Money
-	iDates       []iDate
 	DB           *sqlx.DB
 )
 
-type iDate struct {
-	Date string `json:"date" db:"date"`
-	Sum  string `json:"sum" db:"sum"`
+type GetMoneyRequest struct {
+	Date time.Time `json:"date" db:"date" tformat:"02.01.2006"`
+	//Sum  string `json:"sum" db:"sum"`
+}
+
+func (d *GetMoneyRequest) UnmarshalJSON(data []byte) error {
+	// Ignore null, like in the main JSON package.
+	if string(data) == "null" || string(data) == `""` {
+		return nil
+	}
+	var v interface{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	rawDate := v.(map[string]interface{})
+	vv := rawDate["date"].(string)
+
+	c := reflect.TypeOf(*d).Field(0).Tag
+	g := c.Get("tformat")
+
+	dd, err := time.ParseInLocation(g, vv, time.Local)
+	fmt.Println("Unmarshal rsult: ", dd, err)
+	d.Date = dd
+	return err
+}
+
+type GetMoneyResponse struct {
+	Amount int    `json:"amount"`
+	Date   string `json:"date"`
 }
 
 type Profit struct {
@@ -59,8 +86,8 @@ type Expense struct {
 }
 
 type Money struct {
-	Amount int    `json:"amount" db:"amount"`
-	Date   string `json:"date" db:"date"`
+	Amount int       `json:"amount" db:"amount"`
+	Date   time.Time `json:"date" db:"date" `
 }
 
 type Deposit struct {
@@ -237,32 +264,39 @@ func InsertProfit(c *gin.Context) {
 	fmt.Println(tx)
 }
 
-func InsertDate(c *gin.Context) {
-	var date iDate
-
-	if err := c.ShouldBindJSON(&date); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-	}
-
-	fmt.Println(date)
-
-}
-
 func GetMoney(c *gin.Context) {
 
-	selectSQL := "select sum(m.amount)  from money m where m.date <= $1"
+	var req GetMoneyRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+
+		return
+	}
+
+	selectSQL := `select sum(m.amount) as amount, cast(max(date($1)) AS DATE) as "date" from money m where m.date <= $1`
 
 	fmt.Println("Get Money")
 
-	if err := DB.Select(&iDates, selectSQL, "12.12.2022"); err != nil {
+	var money []Money
+
+	if err := DB.Select(&money, selectSQL, req.Date); err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	fmt.Println()
+	fmt.Println("s")
+	var mresp []GetMoneyResponse
+	for _, m := range money {
+		mresp = append(mresp, GetMoneyResponse{
+			Amount: m.Amount,
+			Date:   m.Date.Format("02.01.2006"),
+		},
+		)
+	}
 
-	c.JSON(http.StatusOK, ExpenceItems)
+	c.JSON(http.StatusOK, mresp)
 }
 
 func GetExpences(c *gin.Context) {
@@ -291,9 +325,8 @@ func main() {
 	router.POST("/expensesitem/insert", InsertExpensesItem)
 	router.POST("/expense/insert", InsertExpense)
 	router.POST("/deposit/insert", InsertDeposit)
-	router.POST("/date/insert", InsertDate)
 	router.GET("/expenceItems", GetExpences)
-	router.GET("/money", GetMoney)
+	router.POST("/money", GetMoney)
 
 	router.Run("localhost:8080")
 	fmt.Println("s")
