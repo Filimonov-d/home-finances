@@ -217,7 +217,6 @@ func InsertSalary(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("LastInsertId:")
 	fmt.Println(res.LastInsertId())
 	fmt.Println(salary)
 }
@@ -241,14 +240,14 @@ func InsertProfit(c *gin.Context) {
 
 	_, err = tx.NamedExecContext(ctx, "insert into profit (amount,source,date) VALUES (:amount,:source,:date)", &profit)
 	if err != nil {
-		fmt.Println("1")
+		fmt.Println(err)
 		tx.Rollback()
 		return
 	}
 
 	_, err = tx.NamedExecContext(ctx, "insert into money (amount,date) VALUES (:amount,:date)", &profit)
 	if err != nil {
-		fmt.Println("2")
+		fmt.Println(err)
 		tx.Rollback()
 		return
 	}
@@ -260,7 +259,6 @@ func InsertProfit(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("LastInsertId:")
 	fmt.Println(tx)
 }
 
@@ -286,7 +284,6 @@ func GetMoney(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("s")
 	var mresp []GetMoneyResponse
 	for _, m := range money {
 		mresp = append(mresp, GetMoneyResponse{
